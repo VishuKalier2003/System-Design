@@ -51,7 +51,8 @@ def link(kind, id_):
     if kind == "w":
         return f'<a href="#/w/{id_}">workflow {id_}</a>'
     if kind == "p":
-        return f'<a href="#/p/{id_}">{id_}</a>'
+        t = next((x["title"] for x in REG["pages"] if x["id"] == id_), id_)
+        return f'<a href="#/p/{id_}">{e(t)}</a>'
     return e(id_)
 
 
@@ -90,10 +91,25 @@ def code(src, lang=""):
     return f'<div class="code"><span class="lang">{e(lang)}</span><pre><code>{e(src.strip())}</code></pre></div>'
 
 
+DIAG_COUNT = [0]
+
+
+def mermaid_safe(src):
+    """Normalize authored Mermaid: ';' ends a statement in sequence diagrams, and '(' in unquoted edge labels breaks flowcharts."""
+    src = src.strip()
+    if src.startswith("sequenceDiagram"):
+        src = "\n".join(ln if ln.strip().startswith(("Note", "participant")) else ln.replace(";", ",") for ln in src.split("\n"))
+    elif src.startswith(("flowchart", "graph")):
+        src = re.sub(r'\|([^|"\n]*[()][^|"\n]*)\|', lambda m: '|"' + m.group(1) + '"|', src)
+    return src
+
+
 def diagram(d, title):
     if not d:
         return ""
     src, expl = d if isinstance(d, (list, tuple)) else (d, "")
+    src = mermaid_safe(src)
+    DIAG_COUNT[0] += 1
     return (f'<figure class="dg"><figcaption>{e(title)}</figcaption>'
             f'<pre class="mermaid">{e(src.strip())}</pre>'
             f'<details class="src"><summary>Diagram source</summary><pre><code>{e(src.strip())}</code></pre></details>'
@@ -140,10 +156,10 @@ def evo_diagram(name, evo):
 def context_diagram(c):
     lines = ["flowchart LR", f'  SELF["{c["name"]}"]:::self']
     for i, u in enumerate(c.get("up", [])):
-        lbl = COMP[u]["name"] if u in COMP else u
-        lines.append(f'  U{i}["{lbl}"] -->|depends on| SELF' if False else f'  SELF -->|calls / reads| U{i}["{lbl}"]')
+        lbl = COMP[u]["name"] if u in COMP else SUB[u]["name"] if u in SUB else u
+        lines.append(f'  SELF -->|calls / reads| U{i}["{lbl}"]')
     for i, d in enumerate(c.get("down", [])):
-        lbl = COMP[d]["name"] if d in COMP else d
+        lbl = COMP[d]["name"] if d in COMP else SUB[d]["name"] if d in SUB else d
         lines.append(f'  D{i}["{lbl}"] -->|consumes| SELF')
     for i, x in enumerate(c.get("ext", [])):
         lines.append(f'  SELF -.->|external| X{i}(["{x}"])')
@@ -336,8 +352,8 @@ def comp_page(c):
     p.append(kv([("Domain", d["name"]), ("Category / tag", c["tag"]), ("Classification", c["kind"]), ("Business purpose", c["biz"]),
                  ("Engineering purpose", c["eng"]), ("First introduction", "Phase " + c["phase"]), ("Deployment boundary", c["deploy"]),
                  ("Data ownership", c["data_own"]),
-                 ("Upstream dependencies", ", ".join(f"[[c:{u}]]" if u in COMP else u for u in c.get("up", [])) or "None"),
-                 ("Downstream consumers", ", ".join(f"[[c:{u}]]" if u in COMP else u for u in c.get("down", [])) or "None"),
+                 ("Upstream dependencies", ", ".join(f"[[c:{u}]]" if u in COMP else f"[[s:{u}]]" if u in SUB else u for u in c.get("up", [])) or "None"),
+                 ("Downstream consumers", ", ".join(f"[[c:{u}]]" if u in COMP else f"[[s:{u}]]" if u in SUB else u for u in c.get("down", [])) or "None"),
                  ("External integrations", ", ".join(c.get("ext", [])) or "None"), ("Interfaces", c["interfaces"])]))
     p.append(diagram((context_diagram(c), "System context generated from the dependency lists above: arrows out of the component are calls/reads it makes; arrows in are consumers; dashed arrows are external providers."), "System context"))
     p.append(H(2, "5.2 Problem definition and requirements"))
@@ -478,6 +494,97 @@ def glossary_page():
     return "".join(out)
 
 
+# ---------------------------------------------------------------- block pages
+def nid(x):
+    return x.replace("-", "_")
+
+
+def auto_block(name):
+    if name == "component_dependency_graph":
+        g = ["flowchart LR"]
+        for d in REG["domains"]:
+            g.append(f'  subgraph {d["id"]}_g["{d["letter"]}. {d["name"]}"]')
+            for c in [c for c in REG["comps"] if c["domain"] == d["id"]]:
+                g.append(f'    {nid(c["id"])}["{c["name"].split(" (")[0]}"]')
+            g.append("  end")
+        for c in REG["comps"]:
+            for u in c.get("up", []):
+                if u in COMP:
+                    g.append(f"  {nid(c['id'])} --> {nid(u)}")
+        return diagram(("\n".join(g), "Generated from every component's upstream dependency list. An arrow A → B means A calls, reads or consumes B. Domains are grouped as subgraphs."), "Global component dependency graph")
+    if name == "domain_map":
+        g = ["flowchart TB"]
+        doms = REG["domains"]
+        W_ = 4
+        for d in doms:
+            cs = [c for c in REG["comps"] if c["domain"] == d["id"]]
+            g.append(f'  {d["id"]}_d["<b>{d["letter"]}. {d["name"]}</b><br/>' + "<br/>".join(c["name"].split(" (")[0] for c in cs) + '"]')
+        for i in range(len(doms) - W_):
+            g.append(f'  {doms[i]["id"]}_d ~~~ {doms[i + W_]["id"]}_d')
+        return diagram(("\n".join(g), "Every domain (A–Q) with its components, read left to right, top to bottom."), "Domain map")
+    if name == "data_ownership":
+        return table(["Component", "Domain", "Owns data", "Deployment boundary"], [[f"[[c:{c['id']}]]", DOM[c["domain"]]["name"], c["data_own"], c["deploy"]] for c in REG["comps"]])
+    if name == "event_catalog":
+        rows = []
+        for w in REG["workflows"]:
+            rows.append([w["events"], f"[[w:{w['n']}]] {w['title']}", w["owners"], w["consistency"]])
+        return table(["Events", "Workflow", "Ownership", "Consistency"], rows)
+    if name == "phase_counts":
+        rows = []
+        for i, p in enumerate(PHASES):
+            cs = {k: 0 for k in STATE}
+            ss = {k: 0 for k in STATE}
+            for c in REG["comps"]:
+                cs[c["evo"][i][0]] += 1
+            for x in REG["subs"]:
+                ss[state_of(x["evo"][i])[0]] += 1
+            rows.append([f"[[phase:{p}]]"] + [f"{cs[k]} / {ss[k]}" for k in STATE])
+        return table(["Phase"] + [f"{v} (comp / sub)" for v in STATE.values()], rows)
+    if name == "roadmap":
+        out = []
+        for i, p in enumerate(PHASES):
+            items = [s for s in REG["subs"] if s["phase"] == p]
+            g = ["flowchart LR"]
+            ids = {s["id"] for s in items}
+            for s in items:
+                g.append(f'  {nid(s["id"])}["{s["name"].split(" (")[0]}"]')
+            for c in REG["comps"]:
+                for a, b in c.get("subdeps", []):
+                    if a in ids and b in ids:
+                        g.append(f"  {nid(b)} --> {nid(a)}")
+            out.append(H(3, f"Phase {p}: {len(items)} subcomponents introduced"))
+            out.append(table(["Order", "Subcomponent", "Component", "Why now"], [[str(k + 1), f"[[s:{s['id']}]]", f"[[c:{s['comp']}]]", state_of(s["evo"][i])[1]] for k, s in enumerate(items)]))
+            if len(items) > 1:
+                out.append(diagram(("\n".join(g), "Implementation dependency graph for this phase: B → A means implement B before A (A depends on B). Unconnected items can be built in parallel."), f"Phase {p} implementation dependencies"))
+        return "".join(out)
+    return f"<p class='gap'>Unknown block {e(name)}</p>"
+
+
+def render_blocks(blocks):
+    out = []
+    for b in blocks:
+        kind = b[0]
+        if kind == "md":
+            out.append(md(b[1]))
+        elif kind == "h":
+            out.append(H(b[1], b[2]))
+        elif kind == "diagram":
+            out.append(diagram(b[1], b[2]))
+        elif kind == "table":
+            out.append(table(b[1], b[2]))
+        elif kind == "kv":
+            out.append(kv(b[1]))
+        elif kind == "code":
+            out.append(code(b[1], b[2] if len(b) > 2 else ""))
+        elif kind == "auto":
+            out.append(auto_block(b[1]))
+        elif kind == "qa":
+            out.append(r_qa(b[1]))
+        elif kind == "adrs":
+            out.append(r_adrs(b[1], b[2]))
+    return "".join(out)
+
+
 # ---------------------------------------------------------------- audit
 SUB_REQ = [("problem", "Problem definition"), ("derive", "First-principles derivation"), ("arch", "Recommended architecture"),
            ("modules", "Internal modules"), ("d_arch", "Architecture diagram"), ("d_seq", "Sequence diagram"),
@@ -554,9 +661,11 @@ def audit_page(res):
 
 DEVIATIONS = """- **Component phase evolution uses four folded dimensions** (architecture & deployment; data, storage & communication; reliability, consistency & security; transition driver) instead of the fifteen separate rows in §7. Observability and concurrency changes are written inside those cells and inside each subcomponent's per-phase entry.
 - **Per-component phase diagrams** are a generated phase-evolution diagram plus one HLD annotated with phase labels, not six separate hand-drawn HLDs per component. Each system phase page does have its own HLD.
-- **Subcomponent question banks** combine eight standard questions answered from that subcomponent's own concurrency, idempotency, consistency, ordering, restart, scaling, failure and ADR fields with several hand-written subcomponent-specific questions. They are not 15-category banks per subcomponent.
+- **Subcomponent question banks are smaller than the specification asks.** Each has eight standard questions answered from that subcomponent's own concurrency, idempotency, consistency, ordering, restart, scaling, failure and ADR fields, plus one to three hand-written subcomponent-specific questions. They are not 15-category banks.
 - **The implementation assignment (§6.15) and final specification (§6.16)** are assembled from the subcomponent's own authored fields, not written as separate prose.
-- **Depth is dense, not textbook length.** Each section gives the decision, the mechanism and the reasoning in a few sentences rather than pages. Uniformity is held by the same required fields for every item, checked by the audit above."""
+- **Depth is dense, not textbook length.** Each section gives the decision, the mechanism and the reasoning in a few sentences rather than pages. Uniformity is held by the same required fields for every item, checked by the audit above. The audit checks that content is present and non-trivial, not that it is correct.
+- **Interactive features:** phase filter, full-text search, completion tracking and click-to-zoom diagrams are implemented. There is no separate *category* filter. Use search on the tag (e.g. "Money ·") or the inventory page instead.
+- **Code samples are illustrative and near-runnable**, aligned with the design. They are not a compiled reference implementation."""
 
 
 # ---------------------------------------------------------------- assemble
@@ -575,7 +684,7 @@ def coverage_matrix_page():
 def nav():
     out = ['<div class="navsec"><div class="navh">Atlas</div>']
     for pg in [x for x in REG["pages"] if x["group"] == "top"]:
-        out.append(f'<a class="nl" href="#/p/{pg["id"]}">{e(pg["title"])}</a>')
+        out.append(f'<a class="nl" href="#/p/{pg["id"]}">{"Home" if pg["id"] == "home" else e(pg["title"])}</a>')
     out.append('<a class="nl" href="#/p/inventory">Inventory &amp; coverage matrix</a><a class="nl" href="#/p/glossary">Glossary</a><a class="nl" href="#/p/audit">Quality audit</a></div>')
     out.append('<div class="navsec"><div class="navh">Phases</div>' + "".join(
         f'<a class="nl" href="#/phase/{ph["id"]}">Phase {ph["id"]} · {e(ph["title"])}</a>' for ph in REG["phases"]) + "</div>")
@@ -602,10 +711,10 @@ def main():
     def art(route, body, title):
         arts.append(f'<article data-route="{e(route)}" data-title="{e(title)}" hidden>{body}</article>')
     for pg in REG["pages"]:
-        art("/p/" + pg["id"], md(pg["body"]) if isinstance(pg["body"], str) and not pg["body"].lstrip().startswith("<") else pg["body"], pg["title"])
+        body = render_blocks(pg["body"]) if isinstance(pg["body"], list) else md(pg["body"])
+        art("/p/" + pg["id"], f"<h1>{e(pg['title'])}</h1>" + body, pg["title"])
     art("/p/inventory", coverage_matrix_page(), "Inventory")
     art("/p/glossary", glossary_page(), "Glossary")
-    art("/p/audit", audit_page(res), "Quality audit")
     for ph in REG["phases"]:
         art("/phase/" + ph["id"], phase_page(ph), "Phase " + ph["id"])
     for d in REG["domains"]:
@@ -616,6 +725,8 @@ def main():
         art("/s/" + s["id"], sub_page(s), s["name"])
     for w in REG["workflows"]:
         art("/w/" + str(w["n"]), workflow_page(w), w["title"])
+    res["summary"]["diagrams"] = DIAG_COUNT[0]  # every diagram actually emitted into the page
+    art("/p/audit", audit_page(res), "Quality audit")
     with open(os.path.join(HERE, "template.html"), encoding="utf-8") as f:
         tpl = f.read()
     with open(os.path.join(HERE, "vendor", "mermaid.min.js"), encoding="utf-8") as f:

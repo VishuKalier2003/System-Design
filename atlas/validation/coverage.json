@@ -4222,7 +4222,298 @@
    "done": true
   }
  },
- "workflows": {},
+ "workflows": {
+  "1": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "2": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "3": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "4": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "5": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "6": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "7": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "8": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "9": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "10": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "11": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "12": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "13": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "14": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "15": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "16": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "17": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "18": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "19": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "20": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "21": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "22": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "23": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "24": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "25": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "26": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "27": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "28": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  },
+  "29": {
+   "seq": true,
+   "states": true,
+   "db": true,
+   "events": true,
+   "sync": true,
+   "async": true,
+   "consistency": true,
+   "fail": true
+  }
+ },
  "summary": {
   "components": {
    "count": 47,
@@ -4240,11 +4531,11 @@
    "sections_required": 54
   },
   "workflows": {
-   "count": 0,
-   "sections_complete": 0,
-   "sections_required": 0
+   "count": 29,
+   "sections_complete": 232,
+   "sections_required": 232
   },
-  "diagrams": 767,
+  "diagrams": 932,
   "questions_answered": 1074,
   "adrs": 167
  }

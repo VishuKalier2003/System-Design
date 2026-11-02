@@ -52,6 +52,9 @@ code{background:var(--code);padding:1px 4px;border-radius:3px;font:12.5px/1.45 u
 .code .lang{position:absolute;right:8px;top:4px;font-size:10.5px;color:var(--muted)}
 figure.dg{margin:14px 0;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg)}
 figure.dg figcaption{font-weight:600;font-size:13px;margin-bottom:6px}
+figure.dg figcaption::after{content:"  · click diagram to zoom";font-weight:400;color:var(--muted);font-size:11px}
+figure.dg.zoom pre.mermaid{overflow:auto;max-height:85vh}figure.dg.zoom pre.mermaid svg{max-width:none!important;height:auto}
+pre.mermaid svg{cursor:zoom-in}figure.dg.zoom pre.mermaid svg{cursor:zoom-out}
 pre.mermaid{background:transparent;text-align:center;overflow:auto;margin:0}
 pre.mermaid:not([data-processed]){text-align:left;font-size:12px;color:var(--muted);white-space:pre-wrap}
 details.src summary{font-size:11.5px;color:var(--muted);cursor:pointer}details.src pre{font-size:11.5px;overflow:auto;background:var(--code);padding:8px}
@@ -74,7 +77,7 @@ body[data-phase="I"] th[data-ph="I"],body[data-phase="II"] th[data-ph="II"],body
 #results{position:fixed;top:46px;right:16px;width:min(560px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none}
 #results a{display:block;padding:8px 12px;border-bottom:1px solid var(--line);color:var(--fg)}#results a:hover{background:var(--chip);text-decoration:none}
 #results small{display:block;color:var(--muted);font-size:12px}
-@media (max-width:900px){#menu{display:inline-block}#nav{position:fixed;left:0;top:46px;z-index:25;transform:translateX(-100%);transition:transform .2s;height:calc(100vh - 46px);background:var(--bg)}body.navopen #nav{transform:none}main{padding:16px}h1{font-size:23px}table.kv th{width:120px}}
+@media (max-width:900px){#top .stats{display:none}#q{width:100%;order:9}#menu{display:inline-block}#nav{position:fixed;left:0;top:46px;z-index:25;transform:translateX(-100%);transition:transform .2s;height:calc(100vh - 46px);background:var(--bg)}body.navopen #nav{transform:none}main{padding:16px}h1{font-size:23px}table.kv th{width:120px}}
 @media print{#top,#nav,.tracker{display:none}article{display:block!important}main{max-width:none}}
 </style>
 </head>
@@ -87,7 +90,7 @@ body[data-phase="I"] th[data-ph="I"],body[data-phase="II"] th[data-ph="II"],body
   <button data-p="">All</button><button data-p="I">I</button><button data-p="II">II</button><button data-p="III">III</button><button data-p="IV">IV</button><button data-p="V">V</button><button data-p="VI">VI</button>
  </div>
  <input id="q" type="search" placeholder="Search the whole Atlas…" autocomplete="off">
- <button class="tbtn" id="theme" title="Toggle theme">◐</button>
+ <button class="tbtn" id="theme" title="Toggle light/dark theme">Theme</button>
 </header>
 <div id="results"></div>
 <div id="wrap">
@@ -153,6 +156,7 @@ body[data-phase="I"] th[data-ph="I"],body[data-phase="II"] th[data-ph="II"],body
     res.style.display='block'},150)});
   res.addEventListener('click',function(){res.style.display='none'});
   document.addEventListener('keydown',function(ev){if(ev.key==='Escape')res.style.display='none';if(ev.key==='/'&&document.activeElement!==q){ev.preventDefault();q.focus()}});
+  document.addEventListener('click',function(ev){var p=ev.target.closest&&ev.target.closest('pre.mermaid');if(p&&p.querySelector('svg'))p.parentElement.classList.toggle('zoom')});
   document.getElementById('menu').onclick=function(){body.classList.toggle('navopen')};
   route();
 })();
