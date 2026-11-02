@@ -143,13 +143,13 @@ def evo_diagram(name, evo):
         if prev:
             lines.append(f"  {prev} --> {nid}")
         prev = nid
-    lines += ["  classDef na fill:#eee,stroke:#bbb,color:#777",
-              "  classDef intro fill:#dbeafe,stroke:#2563eb,color:#111",
-              "  classDef same fill:#f1f5f9,stroke:#64748b,color:#111",
-              "  classDef ext fill:#dcfce7,stroke:#16a34a,color:#111",
-              "  classDef rearch fill:#fef3c7,stroke:#d97706,color:#111",
-              "  classDef repl fill:#fee2e2,stroke:#dc2626,color:#111",
-              "  classDef ret fill:#e5e7eb,stroke:#6b7280,color:#111"]
+    lines += ["  classDef na fill:#FFFFFF,stroke:#CBCBCB,color:#757575",
+              "  classDef intro fill:#EFF3FE,stroke:#276EF1,color:#000000,stroke-width:2px",
+              "  classDef same fill:#F6F6F6,stroke:#757575,color:#000000",
+              "  classDef ext fill:#E6F7EE,stroke:#06C167,color:#000000,stroke-width:2px",
+              "  classDef rearch fill:#FFF2D9,stroke:#FFC043,color:#000000,stroke-width:2px",
+              "  classDef repl fill:#FFEFED,stroke:#E11900,color:#000000",
+              "  classDef ret fill:#EEEEEE,stroke:#545454,color:#545454"]
     return "\n".join(lines)
 
 
@@ -163,7 +163,7 @@ def context_diagram(c):
         lines.append(f'  D{i}["{lbl}"] -->|consumes| SELF')
     for i, x in enumerate(c.get("ext", [])):
         lines.append(f'  SELF -.->|external| X{i}(["{x}"])')
-    lines.append("  classDef self fill:#fde68a,stroke:#b45309,color:#111")
+    lines.append("  classDef self fill:#000000,stroke:#000000,color:#FFFFFF")
     return "\n".join(lines)
 
 
