@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uber System Design Atlas</title>
+<style>
+:root{--bg:#fbfaf7;--panel:#f3f1ec;--fg:#1d1d1b;--muted:#6b6862;--line:#dedad2;--acc:#0f5fb8;--acc2:#b45309;--code:#f0eee8;--chip:#e9e6df;--hl:#fff3c4;--ok:#15803d;--bad:#b91c1c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161616;--panel:#1e1e1e;--fg:#e8e6e1;--muted:#a19d95;--line:#33312d;--acc:#7ab3f5;--acc2:#f0b35a;--code:#232323;--chip:#2c2b28;--hl:#3b3420;--ok:#4ade80;--bad:#f87171}}
+:root[data-theme="dark"]{--bg:#161616;--panel:#1e1e1e;--fg:#e8e6e1;--muted:#a19d95;--line:#33312d;--acc:#7ab3f5;--acc2:#f0b35a;--code:#232323;--chip:#2c2b28;--hl:#3b3420;--ok:#4ade80;--bad:#f87171}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+#top{position:sticky;top:0;z-index:20;display:flex;gap:10px;align-items:center;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+#top .brand{font-weight:700;letter-spacing:.2px;white-space:nowrap}
+#top .stats{color:var(--muted);font-size:12px;flex:1;min-width:200px}
+#q{width:260px;max-width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.pf{display:flex;gap:2px;flex-wrap:wrap}.pf button,.tbtn,#menu{border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:3px 8px;border-radius:5px;cursor:pointer;font-size:12px}
+.pf button.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+#menu{display:none}
+#wrap{display:flex}
+#nav{width:310px;flex:0 0 310px;height:calc(100vh - 46px);position:sticky;top:46px;overflow:auto;border-right:1px solid var(--line);padding:10px 8px 40px;font-size:13.5px;background:var(--bg)}
+.navsec{margin-bottom:14px}.navh{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:6px 6px}
+.nl{display:block;padding:2px 6px;border-radius:4px;color:var(--fg)}.nl:hover{background:var(--chip);text-decoration:none}
+.nl.active{background:var(--hl);font-weight:600}
+.nd>summary,.nc>summary{cursor:pointer;padding:2px 4px;list-style-position:inside}
+.nd>summary a{color:var(--fg);font-weight:600}.nc{margin-left:12px}.nc>summary .nl{display:inline}
+.ns{margin-left:22px;font-size:13px}.ns small{color:var(--muted)}
+.later{opacity:.35}
+.nl.done::after{content:" ✔";color:var(--ok)}.nl.partial::after{content:" ◐";color:var(--acc2)}
+main{flex:1;min-width:0;padding:22px 32px 80px;max-width:1180px}
+h1{font-size:28px;line-height:1.25;margin:4px 0 8px}h2{font-size:20px;margin:34px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:22px 0 8px}h4{font-size:15px;margin:18px 0 6px}h5{font-size:14px;margin:12px 0 4px}h6{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:10px 0 2px}
+.lede{font-size:16.5px;color:var(--fg);max-width:880px}
+.crumbs{font-size:12.5px;color:var(--muted)}
+.meta{margin:4px 0 10px}
+.chip{display:inline-block;background:var(--chip);border-radius:10px;padding:0 8px;font-size:11.5px;margin:1px 2px;white-space:nowrap}
+.chip.ph{background:var(--acc);color:var(--bg)}
+.st-N{opacity:.6}.st-I{background:#bfdbfe;color:#111}.st-E{background:#bbf7d0;color:#111}.st-R{background:#fde68a;color:#111}.st-P{background:#fecaca;color:#111}.st-X{background:#d1d5db;color:#111}
+.tw{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+thead th{background:var(--panel)}
+table.kv th{width:210px;background:var(--panel);font-weight:600}
+table.matrix td,table.matrix th{font-size:12px;padding:3px 6px}
+table.evo.wide td{min-width:150px;font-size:12.5px}
+body[data-phase] [data-ph].phsel{}
+td ul,td ol{margin:0;padding-left:18px}
+code{background:var(--code);padding:1px 4px;border-radius:3px;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.code{position:relative;margin:10px 0}.code pre{background:var(--code);padding:12px;border-radius:6px;overflow:auto;margin:0;border:1px solid var(--line)}
+.code pre code{background:none;padding:0;font-size:12.5px;white-space:pre}
+.code .lang{position:absolute;right:8px;top:4px;font-size:10.5px;color:var(--muted)}
+figure.dg{margin:14px 0;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg)}
+figure.dg figcaption{font-weight:600;font-size:13px;margin-bottom:6px}
+figure.dg figcaption::after{content:"  · click diagram to zoom";font-weight:400;color:var(--muted);font-size:11px}
+figure.dg.zoom pre.mermaid{overflow:auto;max-height:85vh}figure.dg.zoom pre.mermaid svg{max-width:none!important;height:auto}
+pre.mermaid svg{cursor:zoom-in}figure.dg.zoom pre.mermaid svg{cursor:zoom-out}
+pre.mermaid{background:transparent;text-align:center;overflow:auto;margin:0}
+pre.mermaid:not([data-processed]){text-align:left;font-size:12px;color:var(--muted);white-space:pre-wrap}
+details.src summary{font-size:11.5px;color:var(--muted);cursor:pointer}details.src pre{font-size:11.5px;overflow:auto;background:var(--code);padding:8px}
+.dx{font-size:13.5px;color:var(--fg);border-top:1px dashed var(--line);margin-top:6px;padding-top:6px}
+details.adr,details.qa,details.gl{border:1px solid var(--line);border-radius:6px;margin:8px 0;padding:6px 10px;background:var(--bg)}
+details.adr>summary,details.qa>summary,details.gl>summary{cursor:pointer}
+details.qa[open],details.gl[open]{background:var(--panel)}
+.qn{font-weight:700;color:var(--acc2)}
+.ans{padding:4px 0 4px 6px}
+.mech{border-left:3px solid var(--acc);padding:2px 12px;margin:10px 0}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.idea{border:1px solid var(--line);border-radius:6px;padding:4px 12px}.idea.now{border-top:3px solid var(--ok)}.idea.next{border-top:3px solid var(--acc)}.idea.adv{border-top:3px solid var(--acc2)}.idea.rej{border-top:3px solid var(--bad)}
+.na{color:var(--muted);font-size:13.5px}
+.gap{color:var(--bad)}
+.tracker{border:1px dashed var(--line);border-radius:6px;padding:6px 10px;margin:10px 0;font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.tracker-h{width:100%;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+body[data-phase="I"] tr[data-ph="I"],body[data-phase="II"] tr[data-ph="II"],body[data-phase="III"] tr[data-ph="III"],body[data-phase="IV"] tr[data-ph="IV"],body[data-phase="V"] tr[data-ph="V"],body[data-phase="VI"] tr[data-ph="VI"]{background:var(--hl)}
+body[data-phase="I"] td[data-ph="I"],body[data-phase="II"] td[data-ph="II"],body[data-phase="III"] td[data-ph="III"],body[data-phase="IV"] td[data-ph="IV"],body[data-phase="V"] td[data-ph="V"],body[data-phase="VI"] td[data-ph="VI"],
+body[data-phase="I"] th[data-ph="I"],body[data-phase="II"] th[data-ph="II"],body[data-phase="III"] th[data-ph="III"],body[data-phase="IV"] th[data-ph="IV"],body[data-phase="V"] th[data-ph="V"],body[data-phase="VI"] th[data-ph="VI"]{background:var(--hl)}
+#results{position:fixed;top:46px;right:16px;width:min(560px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none}
+#results a{display:block;padding:8px 12px;border-bottom:1px solid var(--line);color:var(--fg)}#results a:hover{background:var(--chip);text-decoration:none}
+#results small{display:block;color:var(--muted);font-size:12px}
+@media (max-width:900px){#top .stats{display:none}#q{width:100%;order:9}#menu{display:inline-block}#nav{position:fixed;left:0;top:46px;z-index:25;transform:translateX(-100%);transition:transform .2s;height:calc(100vh - 46px);background:var(--bg)}body.navopen #nav{transform:none}main{padding:16px}h1{font-size:23px}table.kv th{width:120px}}
+@media print{#top,#nav,.tracker{display:none}article{display:block!important}main{max-width:none}}
+</style>
+</head>
+<body>
+<header id="top">
+ <button id="menu" aria-label="Toggle navigation">☰</button>
+ <span class="brand">Uber System Design Atlas</span>
+ <span class="stats">{{STATS}}</span>
+ <div class="pf" id="pf" title="Phase filter: dims items not yet introduced and highlights that phase in every evolution table">
+  <button data-p="">All</button><button data-p="I">I</button><button data-p="II">II</button><button data-p="III">III</button><button data-p="IV">IV</button><button data-p="V">V</button><button data-p="VI">VI</button>
+ </div>
+ <input id="q" type="search" placeholder="Search the whole Atlas…" autocomplete="off">
+ <button class="tbtn" id="theme" title="Toggle light/dark theme">Theme</button>
+</header>
+<div id="results"></div>
+<div id="wrap">
+ <nav id="nav">{{NAV}}</nav>
+ <main id="main">
+{{ARTICLES}}
+ </main>
+</div>
+<script>{{MERMAID}}</script>
+<script>
+(function(){
+  var store={get:function(k,d){try{var v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+  var root=document.documentElement, body=document.body;
+  var theme=store.get('atlas-theme','');if(theme)root.setAttribute('data-theme',theme);
+  function isDark(){var t=root.getAttribute('data-theme');if(t)return t==='dark';return window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches}
+  var mmOK=typeof mermaid!=='undefined';
+  function initMermaid(){if(mmOK)mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:isDark()?'dark':'default',flowchart:{htmlLabels:true,useMaxWidth:true},sequence:{useMaxWidth:true}})}
+  initMermaid();
+  document.getElementById('theme').onclick=function(){var n=isDark()?'light':'dark';root.setAttribute('data-theme',n);store.set('atlas-theme',n);
+    document.querySelectorAll('pre.mermaid[data-processed]').forEach(function(p){p.removeAttribute('data-processed');p.innerHTML=p.getAttribute('data-src')||p.innerHTML});initMermaid();route();};
+  var arts={};document.querySelectorAll('article').forEach(function(a){arts[a.getAttribute('data-route')]=a});
+  var cur=null;
+  window.__renderErrors=[];
+  async function render(a){
+    if(!mmOK)return;
+    var nodes=[].slice.call(a.querySelectorAll('pre.mermaid:not([data-processed])'));
+    for(var i=0;i<nodes.length;i++){var n=nodes[i];if(!n.getAttribute('data-src'))n.setAttribute('data-src',n.innerHTML);
+      try{await mermaid.run({nodes:[n]})}catch(err){window.__renderErrors.push({route:a.getAttribute('data-route'),err:String(err&&err.message||err)});n.setAttribute('data-processed','err');}}
+  }
+  window.__renderAll=async function(){for(var k in arts){arts[k].hidden=false;await render(arts[k]);arts[k].hidden=true}return window.__renderErrors};
+  function route(){
+    var h=(location.hash||'#/p/home').slice(1);var a=arts[h]||arts['/p/home'];
+    if(cur&&cur!==a)cur.hidden=true;a.hidden=false;
+    if(cur!==a)window.scrollTo(0,0);
+    cur=a;document.title=a.getAttribute('data-title')+' · Uber System Design Atlas';
+    document.querySelectorAll('#nav .nl').forEach(function(l){var on=l.getAttribute('href')==='#'+h;l.classList.toggle('active',on);
+      if(on){var p=l.parentElement;while(p&&p.id!=='nav'){if(p.tagName==='DETAILS')p.open=true;p=p.parentElement}l.scrollIntoView({block:'nearest'})}});
+    syncTracker(a);render(a);body.classList.remove('navopen');
+  }
+  window.addEventListener('hashchange',route);
+  // phase filter
+  var ord={'':0,'I':1,'II':2,'III':3,'IV':4,'V':5,'VI':6};
+  function setPhase(p){store.set('atlas-phase',p);if(p)body.setAttribute('data-phase',p);else body.removeAttribute('data-phase');
+    document.querySelectorAll('#pf button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-p')===p)});
+    document.querySelectorAll('#nav [data-ph]').forEach(function(el){el.classList.toggle('later',!!p&&ord[el.getAttribute('data-ph')]>ord[p])});}
+  document.querySelectorAll('#pf button').forEach(function(b){b.onclick=function(){var p=b.getAttribute('data-p');setPhase(p);if(p)location.hash='#/phase/'+p}});
+  setPhase(store.get('atlas-phase',''));
+  // tracker
+  var track=store.get('atlas-track',{});
+  function syncTracker(a){a.querySelectorAll('input[data-track]').forEach(function(cb){var k=cb.getAttribute('data-track');cb.checked=!!(track[k]&&track[k][cb.getAttribute('data-i')])})}
+  function paintNav(){document.querySelectorAll('#nav [data-key]').forEach(function(l){var t=track[l.getAttribute('data-key')]||{};var n=Object.keys(t).filter(function(k){return t[k]}).length;l.classList.toggle('done',n===8);l.classList.toggle('partial',n>0&&n<8)})}
+  document.addEventListener('change',function(ev){var cb=ev.target;if(!cb.matches||!cb.matches('input[data-track]'))return;var k=cb.getAttribute('data-track');track[k]=track[k]||{};track[k][cb.getAttribute('data-i')]=cb.checked;store.set('atlas-track',track);paintNav()});
+  paintNav();
+  // search
+  var idx=null,q=document.getElementById('q'),res=document.getElementById('results'),tmr;
+  function buildIdx(){idx=[];for(var k in arts){idx.push({r:k,t:arts[k].getAttribute('data-title'),x:arts[k].textContent.replace(/\s+/g,' ').toLowerCase()})}}
+  q.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var s=q.value.trim().toLowerCase();if(s.length<2){res.style.display='none';return}
+    if(!idx)buildIdx();var terms=s.split(/\s+/);var out=[];
+    idx.forEach(function(it){var score=0,ok=true;terms.forEach(function(t){var c=it.x.split(t).length-1;if(!c)ok=false;score+=c+(it.t.toLowerCase().indexOf(t)>=0?50:0)});if(ok)out.push([score,it])});
+    out.sort(function(a,b){return b[0]-a[0]});
+    res.innerHTML=out.slice(0,40).map(function(o){var it=o[1],i=it.x.indexOf(terms[0]);var sn=it.x.slice(Math.max(0,i-60),i+120);
+      var d=document.createElement('div');d.textContent=sn;return '<a href="#'+it.r+'"><b>'+it.t.replace(/</g,'&lt;')+'</b><small>'+it.r+' · …'+d.innerHTML+'…</small></a>'}).join('')||'<a>No results</a>';
+    res.style.display='block'},150)});
+  res.addEventListener('click',function(){res.style.display='none'});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape')res.style.display='none';if(ev.key==='/'&&document.activeElement!==q){ev.preventDefault();q.focus()}});
+  document.addEventListener('click',function(ev){var p=ev.target.closest&&ev.target.closest('pre.mermaid');if(p&&p.querySelector('svg'))p.parentElement.classList.toggle('zoom')});
+  document.getElementById('menu').onclick=function(){body.classList.toggle('navopen')};
+  route();
+})();
+</script>
+</body>
+</html>
