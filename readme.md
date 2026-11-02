@@ -23,7 +23,7 @@ GitHub shows `.html` files as source code, not as a rendered page. Use one of th
 | Diagrams | 932 Mermaid diagrams, all render-checked in headless Chromium |
 | ADRs / answered questions | 167 / 1,074 |
 
-The page has phase filtering, full-text search (`/`), a per-chapter completion tracker (stored in your browser), click-to-zoom diagrams, light and dark themes, and a generated **quality audit** that lists coverage and the known deviations from the original specification.
+The page uses an Uber-style black/white palette with Uber blue and green accents. It has phase filtering, full-text search with keyboard navigation, quiz mode on every chapter, a progress dashboard, completion trackers, collapsible sections, an on-page table of contents, previous/next navigation, keyboard shortcuts (press `?`), copy buttons on code, click-to-zoom diagrams, light and dark themes, and a generated **quality audit** that lists coverage and the known deviations from the original specification.
 
 ## Source and rebuild
 
