@@ -100,7 +100,7 @@ sub(id="ride-options-preview", comp="product-catalog", name="Ride Options Previe
     usecase="Rider opens app: X (4 cars, 3 min), XL (1 car, 7 min), Auto (no cars). Destination entered → indicative prices appear.",
     derive="- Fan-out in parallel with per-call deadlines.\n- Previews for nearby riders are near-identical, so cache by (H3 res-8 cell, product) for 10 s.",
     conc="Stateless; cache fill single-flight.", consistency="Previews may be ≤ 10 s stale.", idem="Read-only aggregation: repeating it returns the same cached result within 10 s.", order="Independent requests; the client shows the latest response.",
-    restart="Stateless.", scale="Cell-level caching collapses load in dense areas.", arch="BFF aggregator using CompletableFuture fan-out with timeouts and a Redis/cache layer keyed by cell.",
+    restart="Stateless: a restarted BFF instance starts with an empty local cache and refills from Redis or the backends.", scale="Cell-level caching collapses load in dense areas.", arch="BFF aggregator using CompletableFuture fan-out with timeouts and a Redis/cache layer keyed by cell.",
     modules=[["Aggregator", "Parallel fan-out"], ["CellCache", "10 s cache per cell × product"], ["Jitter", "Displayed car positions jittered"]],
     d_arch=("""flowchart LR
   REQ["preview"] --> CC["CellCache"]
@@ -444,7 +444,7 @@ sub(id="coupon-redemption", comp="promotions", name="Coupon Redemption & Budget 
     guar=["spent + reserved ≤ budget", "Per-user uses ≤ limit (committed + reserved)", "Each reservation ends committed or released"], nong=["Exact budget utilization (reservations may expire unused)"],
     usecase="Rider reserves ₹50 at quote. Trip completes and the reservation is committed with a ledger entry: promo expense ₹50, rider receivable reduced.",
     derive="- Two counters (reserved, spent) on the budget row; conditional update.\n- Per-user limit via count of active and committed redemptions under a unique index per (campaign, rider, use_no).",
-    conc="Budget row conditional update. Per-user: insert redemption with `use_no` = next, unique (campaign, rider, use_no) within limit.", consistency="Strong (PG).", idem="Reserve keyed by quote_id (unique). Commit/release keyed by redemption id + state check.", order="Commit after release (or vice versa) resolved by state machine: only from RESERVED.",
+    conc="Budget row conditional update. Per-user: insert redemption with `use_no` = next, unique (campaign, rider, use_no) within limit.", consistency="Strong: budget counters and redemption rows change in one PostgreSQL transaction, guarded by CHECK constraints.", idem="Reserve keyed by quote_id (unique). Commit/release keyed by redemption id + state check.", order="Commit after release (or vice versa) resolved by state machine: only from RESERVED.",
     restart="Sweeper releases expired reservations.", scale="Hot campaign row → sharded budget rows at Phase V.", arch="Transactional service with a state machine per redemption and sweeper.",
     modules=[["Reserver", "Budget + user-limit checks"], ["Committer", "Commit on TripCompleted; ledger"], ["Releaser", "Release on cancel/expiry"], ["Sweeper", "Expiry"]],
     d_arch=("""flowchart LR
